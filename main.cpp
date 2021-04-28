@@ -13,6 +13,8 @@ static int _callback_exec(void* notused, int argc, char** argv, char** aszColNam
 	return 0;
 }
 
+//sqlite3的回调函数      
+// sqlite 每查到一条记录，就调用一次这个回调
 
 int LoadMyInfo(void* para, int n_column, char** column_value, char** column_name)
 {
@@ -32,17 +34,16 @@ int LoadMyInfo(void* para, int n_column, char** column_value, char** column_name
 
 	int i;
 
-	printf("记录包含 % d 个字段 / n", n_column);
+	printf("记录包含 % d 个字段 \n", n_column);
 
 	for (i = 0; i < n_column; i++)
-
 	{
 
-		printf("字段名: % s  ß > 字段值: % s / n", column_name[i], column_value[i]);
+		printf("字段名: % s  <---> 字段值: % s \n", column_name[i], column_value[i]);
 
 	}
 
-	printf("------------------ / n");
+	printf("------------------ \n");
 
 	return 0;
 }
@@ -66,6 +67,7 @@ int main(int argc, char* argv[])
 	//创建一个表
 	//创建一个测试表，表名叫 MyTable_1，有2个字段： ID 和 name。其中ID是一个自动增加的类型，以后insert时可以不去指定这个字段，它会自己从0开始增加
 	sSQL = "CREATE TABLE IF NOT EXISTS MyTable_1( ID integer primary key autoincrement, name nvarchar(32) )";
+
 	ret = sqlite3_exec(db, sSQL, NULL, NULL,&pErrMsg);
 	if (ret != SQLITE_OK)
 	{
@@ -74,7 +76,8 @@ int main(int argc, char* argv[])
 	}
 
 	//插入一些记录
-	sSQL = "insert into MyTable_1(name) values('abcd')";
+	sSQL = "insert into MyTable_1(name) values('图片')";
+
 	ret = sqlite3_exec(db, sSQL, NULL, NULL, &pErrMsg);
 	if (ret != SQLITE_OK)
 	{
@@ -86,6 +89,7 @@ int main(int argc, char* argv[])
 
 
 	sSQL = "insert into MyTable_1(name) values('骑单车')";
+
 	ret = sqlite3_exec(db, sSQL, NULL, NULL, &pErrMsg);
 	if (ret != SQLITE_OK)
 	{
@@ -96,9 +100,9 @@ int main(int argc, char* argv[])
 
 
 	sSQL = "insert into MyTable_1(name) values('坐汽车')";
+
 	ret = sqlite3_exec(db, sSQL, NULL, NULL, &pErrMsg);
 	if (ret != SQLITE_OK)
-
 	{
 
 		fprintf(stderr, "SQL error: \n Error Code %d ; Error Result : %s\n", ret, pErrMsg);
@@ -107,7 +111,7 @@ int main(int argc, char* argv[])
 
 	sqlite3_exec(db, "select * from MyTable_1", LoadMyInfo, NULL, &pErrMsg);
 
-	ret = sqlite3_exec(db, sSQL, _callback_exec, 0, &pErrMsg);
+	//ret = sqlite3_exec(db, sSQL, _callback_exec, 0, &pErrMsg);
 	if (ret != SQLITE_OK)
 	{
 		fprintf(stderr, "SQL error: %s\n", pErrMsg);
