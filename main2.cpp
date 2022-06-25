@@ -1,5 +1,5 @@
 ﻿#include <iostream>
-#include <sqlite3.h>
+#include "./include/sqlite3.h"
 
 using namespace std;
 
@@ -48,7 +48,7 @@ int LoadMyInfo(void* para, int n_column, char** column_value, char** column_name
 	return 0;
 }
 
-int main1(/*int argc, char* argv[]*/)
+int main(/*int argc, char* argv[]*/)
 {
 	const char* file = "test.db";
 	const char* sSQL = "select * from stu;";

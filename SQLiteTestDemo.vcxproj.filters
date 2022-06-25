@@ -15,31 +15,22 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main2.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="opencv.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Base64.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="CSmtp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\sqlite3.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Base64.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CSmtp.h">
       <Filter>头文件</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

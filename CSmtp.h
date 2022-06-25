@@ -1,46 +1,58 @@
-//#pragma once
+#ifndef CSENDMAIL_H
+#define	CSENDMAIL_H
 
-#include <iostream>  
-#include <string>  
+#include <string>
 #include <vector>
-#include <fstream>  
-
-#include <WinSock2.h>  //适用平台 Windows
-
-#pragma  comment(lib, "ws2_32.lib") /*链接ws2_32.lib动态链接库*/ 
-// POP3服务器（端口：110） Csmtp服务器（端口：25） 
+#include <iostream>
+#include <fstream>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib,"ws2_32.lib")
 using namespace std;
-class Csmtp
+
+#define SLEEPTIME 500
+
+/************ CSendMail类 使用说明 ******************************
+************* LoginSMTP      ： 1，先登录
+************* SetEnclPath    ： 2，设置附件路径
+************* SetTargetEmail ： 3，设置目标邮箱，以及是否发送附件
+************* Send           ： 4，发送邮件
+*****************************************************************/
+
+class CSendMail
 {
-
-	int port;
-	string domain;
-	string user;
-	string pass;
-	string target;
-	string title;  //邮件标题
-	string content;  //邮件内容
-
-
-	HOSTENT* pHostent;
-	SOCKET sockClient;  //客户端的套接字
-	vector <string> filename;  //存储附件名的向量
-
 public:
+    CSendMail();
+    ~CSendMail();
 
-	Csmtp(
-		int _port, //端口25
-		string _domain,     //域名
-		string _user,       //发送者的邮箱
-		string _pass,       //密码
-		string _target)     //目标邮箱
-		:port(_port), domain(_domain), user(_user), pass(_pass), target(_target) {};//内容 
-	bool CReateSocket();
-	void setTitle(string tem) { title = tem; }
-	void setContent(string tem) { content = tem; }
+    //设置自己发件人的邮箱
+    bool SetSMTP(string address, int port);
+    //登录
+    bool LoginSMTP(string Email, string Password);
+    //设置发送目标，邮箱，标题，内容，是否有附件
+    bool SetTargetEmail(string Email, string title, string body, bool enclosure = false);
+    //设置附件路径
+    bool SetEnclPath(vector<string>filename);
+    //发送邮件
+    bool Send();
 
-	int SendAttachment(SOCKET& sockClient);
-	int SendMail();
-	void addfile(string str) { filename.push_back(str); }
+protected:
+    int  _GetError(int flags = 0);
+    bool _SendEnclosure();
 
+private:
+    string m_UserEMail;
+    string m_PassWord;
+    string m_STMPAddress;
+    int    m_STMPPort;
+    bool   m_Login;
+    vector<string> m_Filename;
+
+    /*---------------Socket------------*/
+    WSADATA     m_Wsadata;
+    sockaddr_in m_STMPAddr;
+    SOCKET      m_SMTPSocket;
 };
+
+
+#endif	/* CSENDMAIL_H */
