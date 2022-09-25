@@ -260,7 +260,7 @@ bool CSendMail::_SendEnclosure()
             cout << "无法打开文件！" << endl;
             return false;
         }
-        char  m_cSendBuff[4096];//发送缓冲区
+        char  m_cSendBuff[4096] = {0};//发送缓冲区
 
         sprintf_s(m_cSendBuff, "--@boundary@\r\nContent-Type: application/octet-stream;\r\n  name=\"%s\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: attachment;\r\n  filename=\"%s\"\r\n\r\n", m_Filename.at(i).c_str(), m_Filename.at(i).c_str());
         send(m_SMTPSocket, m_cSendBuff, strlen(m_cSendBuff), 0);
