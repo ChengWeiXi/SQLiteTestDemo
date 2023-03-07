@@ -13,27 +13,51 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="功能模块">
+      <UniqueIdentifier>{ef859d6c-86d2-432b-8a3a-bdf29e863d72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="功能模块\SMTP">
+      <UniqueIdentifier>{930d8c58-3c14-4204-98e9-4f2e517d7edb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="功能模块\HTTP">
+      <UniqueIdentifier>{b8bc5659-2ac0-4ef5-97e1-b9c82accaf92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="功能模块\Sqlite3">
+      <UniqueIdentifier>{d09ccdf0-7d6d-46e4-a38f-f41b9c2ecc1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="功能模块\Libxlsxwriter">
+      <UniqueIdentifier>{dae2a434-600a-4aa6-863b-4dfa2baef83e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="功能模块\Opencv">
+      <UniqueIdentifier>{fbd2fc1f-da12-450a-ad12-af047641b15a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CSmtp.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="SDK\Sqlite3\cpp\CppSQLite3.cpp">
+      <Filter>功能模块\Sqlite3</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\SMTP\CSmtp.cpp">
+      <Filter>功能模块\SMTP</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Base64.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="CSmtp.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="include\sqlite3.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="include\httplib.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="SDK\Http\httplib.h">
+      <Filter>功能模块\HTTP</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Sqlite3\include\CppSQLite3.h">
+      <Filter>功能模块\Sqlite3</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\Sqlite3\include\sqlite3.h">
+      <Filter>功能模块\Sqlite3</Filter>
+    </ClInclude>
+    <ClInclude Include="SDK\SMTP\CSmtp.h">
+      <Filter>功能模块\SMTP</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

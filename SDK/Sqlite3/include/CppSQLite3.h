@@ -8,8 +8,7 @@
 #ifndef CppSQLite3_H
 #define CppSQLite3_H
 
-#include "G:/SVN_CODE/5794_V32_INK/PSP/PSP_SDK/inc/sqlite3.h" 
-/*#include "../../../Input/SQLite/inc/sqlite3.h"*/
+#include "sqlite3.h"
 #include <cstdio>
 #include <cstring>
 
@@ -25,13 +24,13 @@ namespace detail
     public:
 
         // Default constructor
-        SQLite3Memory();
+        SQLite3Memory() noexcept;
         // Constructor that allocates memory of a given size
         SQLite3Memory(int nBufferLen);
         // Constructor that formats a string with sqlite memory allocation
         SQLite3Memory(const char* szFormat, va_list list);
         // Destructor
-        ~SQLite3Memory();
+        ~SQLite3Memory() noexcept ;
 
         // Copy constructor
         SQLite3Memory(SQLite3Memory const& other);

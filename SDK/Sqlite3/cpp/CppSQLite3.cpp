@@ -5,7 +5,7 @@
  * See LICENSE file for copyright and license info
 */
 
-#include "stdafx.h"
+//#include "stdafx.h"
 #include "CppSQLite3.h"
 #include <cstdlib>
 #include <utility>
@@ -30,13 +30,13 @@ int sqlite3_decode_binary(const unsigned char *in, unsigned char *out);
 namespace detail
 {
 
-SQLite3Memory::SQLite3Memory() :
+SQLite3Memory::SQLite3Memory() noexcept:
     mnBufferLen(0),
     mpBuf(nullptr)
 {
 }
 
-SQLite3Memory::SQLite3Memory(int nBufferLen) :
+SQLite3Memory::SQLite3Memory(int nBufferLen):
     mnBufferLen(nBufferLen),
     mpBuf(sqlite3_malloc(nBufferLen))
 {
@@ -48,7 +48,7 @@ SQLite3Memory::SQLite3Memory(int nBufferLen) :
     }
 }
 
-SQLite3Memory::SQLite3Memory(const char* szFormat, va_list list) :
+SQLite3Memory::SQLite3Memory(const char* szFormat, va_list list):
     mnBufferLen(0),
     mpBuf(sqlite3_vmprintf(szFormat, list))
 {
@@ -66,7 +66,7 @@ SQLite3Memory::~SQLite3Memory()
     clear();
 }
 
-SQLite3Memory::SQLite3Memory(SQLite3Memory const& other) :
+SQLite3Memory::SQLite3Memory(SQLite3Memory const& other):
     mnBufferLen(other.mnBufferLen),
     mpBuf(sqlite3_malloc(other.mnBufferLen))
 {
@@ -86,7 +86,7 @@ SQLite3Memory& SQLite3Memory::operator=(SQLite3Memory const& lhs)
     return *this;
 }
 
-SQLite3Memory::SQLite3Memory(SQLite3Memory&& other) :
+SQLite3Memory::SQLite3Memory (SQLite3Memory&& other):
     mnBufferLen(other.mnBufferLen),
     mpBuf(other.mpBuf)
 {

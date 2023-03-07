@@ -74,8 +74,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Code\CppSQLite\SQLiteTestDemo\include;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\VS2019_Code\SQLiteTestDemo\lib\Debug\32;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)SDK\Sqlite3\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)SDK\Sqlite3\lib\Debug\32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -152,14 +152,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CSmtp.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="SDK\SMTP\CSmtp.cpp" />
+    <ClCompile Include="SDK\Sqlite3\cpp\CppSQLite3.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Base64.h" />
-    <ClInclude Include="CSmtp.h" />
-    <ClInclude Include="include\httplib.h" />
     <ClInclude Include="include\sqlite3.h" />
+    <ClInclude Include="SDK\Http\httplib.h" />
+    <ClInclude Include="SDK\SMTP\CSmtp.h" />
+    <ClInclude Include="SDK\Sqlite3\include\CppSQLite3.h" />
+    <ClInclude Include="SDK\Sqlite3\include\sqlite3.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
