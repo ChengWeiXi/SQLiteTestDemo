@@ -59,6 +59,9 @@
     <ClInclude Include="SDK\SMTP\CSmtp.h">
       <Filter>功能模块\SMTP</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -67,5 +70,10 @@
     <Image Include="test_image.jpg">
       <Filter>资源文件</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="SQLiteTestDemo.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
