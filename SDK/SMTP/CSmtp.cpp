@@ -147,7 +147,7 @@ bool CSendMail::LoginSMTP(string Email, string Password)
     send(m_SMTPSocket, bufferHello, strlen(bufferHello), 0);
     if (_GetError() != 250)
     {
-        cout << "helo failed!" << endl;
+        cout << "hello failed!" << endl;
         m_Login = false;
         return m_Login;
     }

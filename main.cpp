@@ -1,7 +1,10 @@
-﻿#include <iostream>
+﻿#define _CRT_SECURE_NO_WARNINGS
+#include <iostream>
 #include "./SDK/Sqlite3/include/CppSqlite3.h"
 #include"./SDK/SMTP/CSmtp.h"
 #include "./Global/inc/Base64.h"
+#include "./Global/inc/spdlog/spdlog.h"
+#include "./Global/inc/spdlog/sinks/basic_file_sink.h"
 #include "./SDK/Http/httplib.h"
 #include <memory>
 #include <future>
@@ -9,6 +12,7 @@
 #include <queue>
 
 using namespace std;
+using namespace spdlog;
 
 std::string StringToUTF8(const std::string& str)
 {
@@ -155,7 +159,7 @@ public:
     A(A& a) :pointer(new int(*a.pointer)) {
         std::cout << "拷贝" << pointer << std::endl;
     } // 无意义的对象拷贝
-    A(A&& a) :pointer(a.pointer) {
+    A(A&& a) noexcept :pointer(a.pointer) {
         a.pointer = nullptr;
         std::cout << "移动" << pointer << std::endl;
     }
@@ -171,125 +175,375 @@ A return_rvalue(bool test) {
     else return b;     // 等价于 static_cast<A&&>(b);
 }
 
+class Flower
+{
+public:
+    virtual void display()//基类的虚函数，形成动态绑定，永远不会运行“动物”，Flower类也从1个字节变成了4个字节（指针）
+        //只有在程序运行的时候才知道speak函数具体运行哪个子类的speak函数
+    {
+        cout << "动物！" << endl;
+    }
+};
+
+class Rose :public Flower
+{
+public:
+    void display()//派生类重写了基类的虚函数，覆盖了原来虚函数表中的地址
+    {
+        cout << "玫瑰" << endl;
+    }
+};
+
+void fun(Flower& f1)//派生类的对象作为实参，形参可以用基类的引用或者指针来接收，目的在于实现多态性
+{//实现了派生类对象向基类类型的转换
+    f1.display();//加上virtual之后，这一行就要去看你f1派生对象的类型，去调用相对应的display函数
+}
+
+// template<typename T>
+// class smart_ptr {
+// public:
+//     explicit smart_ptr(
+//         T* ptr = nullptr)
+//         : ptr_(ptr) {}
+// 
+//     smart_ptr(smart_ptr&& other) { ptr_ = other.release(); }
+// 
+//     ~smart_ptr()
+//     {
+//         delete ptr_;
+//     }
+// 
+//     //smart_ptr& operator=(smart_ptr& rhs) { smart_ptr(rhs).swap(*this); return *this; }
+//     smart_ptr& operator=(smart_ptr rhs) { rhs.swap(*this); return *this; }
+// 
+//     T& operator*() const { return *ptr_; } 
+//     T* operator->() const { return ptr_; }
+//     operator bool() const { return ptr_; }
+// 
+//     T* get() const { return ptr_; }
+//     T* release() { T* ptr = ptr_; ptr_ = nullptr; return ptr; }
+// 
+//     void swap(smart_ptr& rhs) { using std::swap; swap(ptr_, rhs.ptr_); }
+// 
+// private:
+//     T* ptr_;
+// };
+
+
+
+class shared_count {
+public:
+    shared_count() : count_(1) {}
+    void add_count()
+    {
+        ++count_;
+    }
+    long reduce_count()
+    {
+        return --count_;
+    }
+    long get_count() const
+    {
+        return count_;
+    }
+
+private:
+    long count_;
+};
+
+template <typename T>
+class smart_ptr {
+public:
+    template <typename U>
+    friend class smart_ptr;
+
+    explicit smart_ptr(T* ptr = nullptr)
+        : ptr_(ptr)
+    {
+        if (ptr) {
+            shared_count_ =
+                new shared_count();
+        }
+    }
+    ~smart_ptr()
+    {
+        if (ptr_ &&
+            !shared_count_
+            ->reduce_count()) {
+            delete ptr_;
+            delete shared_count_;
+        }
+    }
+
+    smart_ptr(const smart_ptr& other)
+    {
+        ptr_ = other.ptr_;
+        if (ptr_) {
+            other.shared_count_
+                ->add_count();
+            shared_count_ =
+                other.shared_count_;
+        }
+    }
+
+    template <typename U>
+    smart_ptr(const smart_ptr<U>& other)
+    {
+        ptr_ = other.ptr_;
+        if (ptr_) {
+            other.shared_count_
+                ->add_count();
+            shared_count_ =
+                other.shared_count_;
+        }
+    }
+    template <typename U>
+    smart_ptr(smart_ptr<U>&& other)
+    {
+        ptr_ = other.ptr_;
+        if (ptr_) {
+            shared_count_ =
+                other.shared_count_;
+            other.ptr_ = nullptr;
+        }
+    }
+
+
+    long use_count() const
+    {
+        if (ptr_) {
+            return shared_count_
+                ->get_count();
+        }
+        else {
+            return 0;
+        }
+    }
+
+    T& operator*() const noexcept
+    {
+        return *ptr_;
+    }
+    T* operator->() const noexcept
+    {
+        return ptr_;
+    }
+    operator bool() const noexcept
+    {
+        return ptr_;
+    }
+
+
+private:
+    T* ptr_;
+    shared_count* shared_count_;
+};
+
+template <typename T>
+void swap(smart_ptr<T>& lhs,
+    smart_ptr<T>& rhs) noexcept
+{
+    lhs.swap(rhs);
+}
+
+template <typename T, typename U>
+smart_ptr<T> static_pointer_cast(
+    const smart_ptr<U>& other) noexcept
+{
+    T* ptr = static_cast<T*>(other.get());
+    return smart_ptr<T>(other, ptr);
+}
+
+template <typename T, typename U>
+smart_ptr<T> reinterpret_pointer_cast(
+    const smart_ptr<U>& other) noexcept
+{
+    T* ptr = reinterpret_cast<T*>(other.get());
+    return smart_ptr<T>(other, ptr);
+}
+
+template <typename T, typename U>
+smart_ptr<T> const_pointer_cast(
+    const smart_ptr<U>& other) noexcept
+{
+    T* ptr = const_cast<T*>(other.get());
+    return smart_ptr<T>(other, ptr);
+}
+
+template <typename T, typename U>
+smart_ptr<T> dynamic_pointer_cast(
+    const smart_ptr<U>& other) noexcept
+{
+    T* ptr = dynamic_cast<T*>(other.get());
+    return smart_ptr<T>(other, ptr);
+}
+
+class shape {
+public:
+    virtual ~shape() {}
+};
+
+class circle : public shape {
+public:
+    ~circle() { puts("~circle()"); }
+};
+
+
+template <int n>
+struct factorial {
+    static const int value =
+        n * factorial<n - 1>::value;
+};
+
+template <>
+struct factorial<0> {
+    static const int value = 1;
+};
+
 int main(int argc, char* argv[])
 {
-//     int nCount = 897;
-//     char cValue = 5, cShow = 56;
-//     lambda_value_capture();
-//     cValue--;
-//     auto ptrFunc = [nCount](char* pValue) ->int { return nCount + *pValue; };
-//     double nTemp = ptrFunc(&cShow);
-// 
-// 
-//     auto bindFoo = std::bind(foo, std::placeholders::_1, std::placeholders::_2, 2);
-//     // 这时调用 bindFoo 时，只需要提供第一个参数即可
-//     bindFoo(1,5);
-// 
-//     std::string lv1 = "string,"; // lv1 是一个左值
-// // std::string&& r1 = lv1; // 非法, 右值引用不能引用左值
-//     std::string&& rv1 = std::move(lv1); // 合法, std::move可以将左值转移为右值
-//     std::cout << rv1 << std::endl; // string,
-// 
-//     const std::string& lv2 = lv1 + lv1; // 合法, 常量左值引用能够延长临时变量的生命周期
-//     // lv2 += "Test"; // 非法, 常量引用无法被修改
-//     std::cout << lv2 << std::endl; // string,string,
-// 
-//     std::string&& rv2 = lv1 + lv2; // 合法, 右值引用延长临时对象生命周期
-//     rv2 += "Test"; // 合法, 非常量引用能够修改临时变量
-//     std::cout << rv2 << std::endl; // string,string,string,Test
-// 
-//     reference(rv2); // 输出左值
-// 
-// 
-//     A obj = return_rvalue(false);
-//     std::cout << "obj:" << std::endl;
-//     std::cout << obj.pointer << std::endl;
-//     std::cout << *obj.pointer << std::endl;
+    //     int nCount = 897;
+    //     char cValue = 5, cShow = 56;
+    //     lambda_value_capture();
+    //     cValue--;
+    //     auto ptrFunc = [nCount](char* pValue) ->int { return nCount + *pValue; };
+    //     double nTemp = ptrFunc(&cShow);
+    // 
+    // 
+    //     auto bindFoo = std::bind(foo, std::placeholders::_1, std::placeholders::_2, 2);
+    //     // 这时调用 bindFoo 时，只需要提供第一个参数即可
+    //     bindFoo(1,5);
+    // 
+    //     std::string lv1 = "string,"; // lv1 是一个左值
+    // // std::string&& r1 = lv1; // 非法, 右值引用不能引用左值
+    //     std::string&& rv1 = std::move(lv1); // 合法, std::move可以将左值转移为右值
+    //     std::cout << rv1 << std::endl; // string,
+    // 
+    //     const std::string& lv2 = lv1 + lv1; // 合法, 常量左值引用能够延长临时变量的生命周期
+    //     // lv2 += "Test"; // 非法, 常量引用无法被修改
+    //     std::cout << lv2 << std::endl; // string,string,
+    // 
+    //     std::string&& rv2 = lv1 + lv2; // 合法, 右值引用延长临时对象生命周期
+    //     rv2 += "Test"; // 合法, 非常量引用能够修改临时变量
+    //     std::cout << rv2 << std::endl; // string,string,string,Test
+    // 
+    //     reference(rv2); // 输出左值
+    // 
+    // 
+    //     A obj = return_rvalue(false);
+    //     std::cout << "obj:" << std::endl;
+    //     std::cout << obj.pointer << std::endl;
+    //     std::cout << *obj.pointer << std::endl;
 
 
-//     // 将一个返回值为7的 lambda 表达式封装到 task 中
-//     // std::packaged_task 的模板参数为要封装函数的类型
-//     std::packaged_task<int()> task([]() {return 7; });
-//     // 获得 task 的期物
-//     std::future<int> result = task.get_future(); // 在一个线程中执行 task
-//     std::thread(std::move(task)).detach();
-//     std::cout << "waiting...";
-//     result.wait(); // 在此设置屏障，阻塞到期物的完成
-//     // 输出执行结果
-//     std::cout << "done!" << std::endl << "future result is "
-//         << result.get() << std::endl;
+    //     // 将一个返回值为7的 lambda 表达式封装到 task 中
+    //     // std::packaged_task 的模板参数为要封装函数的类型
+    //     std::packaged_task<int()> task([]() {return 7; });
+    //     // 获得 task 的期物
+    //     std::future<int> result = task.get_future(); // 在一个线程中执行 task
+    //     std::thread(std::move(task)).detach();
+    //     std::cout << "waiting...";
+    //     result.wait(); // 在此设置屏障，阻塞到期物的完成
+    //     // 输出执行结果
+    //     std::cout << "done!" << std::endl << "future result is "
+    //         << result.get() << std::endl;
 
 
-//     std::queue<int> produced_nums;
-//     std::mutex mtx;
-//     std::condition_variable cv;
-//     bool notified = false;  // 通知信号
-// 
-//     // 生产者
-//     auto producer = [&]() {
-//         for (int i = 0; ; i++) {
-//             std::this_thread::sleep_for(std::chrono::milliseconds(900));
-//             std::unique_lock<std::mutex> lock(mtx);
-//             std::cout << "producing " << i << std::endl;
-//             produced_nums.push(i);
-//             notified = true;
-//             cv.notify_all(); // 此处也可以使用 notify_one
-//         }
-//     };
-//     // 消费者
-//     auto consumer = [&]() {
-//         while (true) {
-//             std::unique_lock<std::mutex> lock(mtx);
-//             while (!notified) {  // 避免虚假唤醒
-//                 cv.wait(lock);
-//             }
-//             // 短暂取消锁，使得生产者有机会在消费者消费空前继续生产
-//             lock.unlock();
-//             // 消费者慢于生产者
-//             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-//             lock.lock();
-//             while (!produced_nums.empty()) {
-//                 std::cout << "consuming " << produced_nums.front() << std::endl;
-//                 produced_nums.pop();
-//             }
-//             notified = false;
-//         }
-//     };
-// 
-//     // 分别在不同的线程中运行
-//     std::thread p(producer);
-//     std::thread cs[2];
-//     for (int i = 0; i < 2; ++i) {
-//         cs[i] = std::thread(consumer);
-//     }
-//     p.join();
-//     for (int i = 0; i < 2; ++i) {
-//         cs[i].join();
-//     }
-    std::atomic<int> counter;
+    //     std::queue<int> produced_nums;
+    //     std::mutex mtx;
+    //     std::condition_variable cv;
+    //     bool notified = false;  // 通知信号
+    // 
+    //     // 生产者
+    //     auto producer = [&]() {
+    //         for (int i = 0; ; i++) {
+    //             std::this_thread::sleep_for(std::chrono::milliseconds(900));
+    //             std::unique_lock<std::mutex> lock(mtx);
+    //             std::cout << "producing " << i << std::endl;
+    //             produced_nums.push(i);
+    //             notified = true;
+    //             cv.notify_all(); // 此处也可以使用 notify_one
+    //         }
+    //     };
+    //     // 消费者
+    //     auto consumer = [&]() {
+    //         while (true) {
+    //             std::unique_lock<std::mutex> lock(mtx);
+    //             while (!notified) {  // 避免虚假唤醒
+    //                 cv.wait(lock);
+    //             }
+    //             // 短暂取消锁，使得生产者有机会在消费者消费空前继续生产
+    //             lock.unlock();
+    //             // 消费者慢于生产者
+    //             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    //             lock.lock();
+    //             while (!produced_nums.empty()) {
+    //                 std::cout << "consuming " << produced_nums.front() << std::endl;
+    //                 produced_nums.pop();
+    //             }
+    //             notified = false;
+    //         }
+    //     };
+    // 
+    //     // 分别在不同的线程中运行
+    //     std::thread p(producer);
+    //     std::thread cs[2];
+    //     for (int i = 0; i < 2; ++i) {
+    //         cs[i] = std::thread(consumer);
+    //     }
+    //     p.join();
+    //     for (int i = 0; i < 2; ++i) {
+    //         cs[i].join();
+    //     }
 
-    int a = 0;
-    int flag = 0;
+//     //“指针常量”即一个指针变量，该变量不能被赋值，而指针指向的内存单元的内容是可以改变的；
+//     //重点在最后的“常量”
+//     int* const ptr = &nCount;
+//     *ptr = 45;
+//     
+//     
+//     //“常量指针”即一个指向常量的指针，指针变量本身可以赋值，而指针指向的内存单元的内容是不可以被重新赋值的；
+//     //重点在最后的“指针”
+//     const int* ptrToConst;
+//     //*ptrToConst = 34; error
 
-    std::thread t1([&]() {
-        while (flag != 1);
 
-        int b = a;
-        std::cout << "b = " << b << std::endl;
-        });
+    smart_ptr<circle> ptr1(new circle());
+    printf("use count of ptr1 is %ld\n",
+        ptr1.use_count());
+    smart_ptr<shape> ptr2;
+    printf("use count of ptr2 was %ld\n",
+        ptr2.use_count());
+    ptr2 = ptr1;
+    printf("use count of ptr2 is now %ld\n",
+        ptr2.use_count());
+    if (ptr1) {
+        puts("ptr1 is not empty");
+    }
 
-    std::thread t2([&]() {
-        a = 5;
-        flag = 1;
-        });
+    spdlog::info("Welcome to spdlog!");
+    spdlog::error("Some error message with arg: {}", 1);
 
-    t1.join();
-    t2.join();
-    const char* pName = "rherherfer";
-    std::string str = R"(C:\File\To\Path)";
-    std::cout << str << std::endl;
-    shared_ptr<const char> p = make_shared<const char>(new char[12]);
-    *p = pName;
+    spdlog::warn("Easy padding in numbers like {:08d}", 12);
+    spdlog::critical("Support for int: {0:d};  hex: {0:x};  oct: {0:o}; bin: {0:b}", 42);
+    spdlog::info("Support for floats {:03.2f}", 1.23456);
+    spdlog::info("Positional args are {1} {0}..", "too", "supported");
+    spdlog::info("{:<30}", "left aligned");
+
+    spdlog::set_level(spdlog::level::debug); // Set global log level to debug
+    spdlog::debug("This message should be displayed..");
+
+    // change log pattern
+    spdlog::set_pattern("[%H:%M:%S %z] [%n] [%^---%L---%$] [thread %t] %v");
+
+    // Compile time log levels
+    // define SPDLOG_ACTIVE_LEVEL to desired level
+    SPDLOG_TRACE("Some trace message with param {}", 42);
+    SPDLOG_DEBUG("Some debug message");
+
+    // Set the default logger to file logger
+    auto file_logger = spdlog::basic_logger_mt("basic_logger", "logs/basic.txt");
+    spdlog::set_default_logger(file_logger);
 
     return 0;
 
